@@ -1,6 +1,8 @@
-"""Rács alapú környezeti mezők: hőmérséklet és víz, NumPy-val."""
+"""Rács alapú környezeti mezők: hőmérséklet, víz és terepakadályok, NumPy-val."""
 
 from __future__ import annotations
+
+import random
 
 import numpy as np
 
@@ -14,6 +16,23 @@ class Environment:
         self.cell_size = cell_size
         self.temperature = np.full((rows, cols), config.DEFAULT_BASE_TEMP, dtype=np.float64)
         self.water = np.random.uniform(0.25, 0.55, size=(rows, cols))
+        self.obstacles = self._generate_obstacles()
+
+    def _generate_obstacles(self) -> np.ndarray:
+        """Sziklatömböket rajzol véletlen sétával, hogy szerves alakú,
+        összefüggő akadályok jöjjenek létre szórt egyedi cellák helyett."""
+        obstacles = np.zeros((self.rows, self.cols), dtype=bool)
+        steps = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        for _ in range(config.OBSTACLE_CLUSTER_COUNT):
+            row = random.randint(0, self.rows - 1)
+            col = random.randint(0, self.cols - 1)
+            length = random.randint(*config.OBSTACLE_CLUSTER_SIZE)
+            for _ in range(length):
+                obstacles[row, col] = True
+                dr, dc = random.choice(steps)
+                row = min(max(row + dr, 0), self.rows - 1)
+                col = min(max(col + dc, 0), self.cols - 1)
+        return obstacles
 
     def _diffuse(self, field: np.ndarray, rate: float) -> None:
         neighbor_avg = (
@@ -53,6 +72,10 @@ class Environment:
         row, col = self._cell_index(x, y)
         return float(self.water[row, col])
 
+    def is_blocked(self, x: float, y: float) -> bool:
+        row, col = self._cell_index(x, y)
+        return bool(self.obstacles[row, col])
+
     def add_water(self, x: float, y: float, amount: float) -> None:
         row, col = self._cell_index(x, y)
         self.water[row, col] = min(1.0, self.water[row, col] + amount)
@@ -72,5 +95,6 @@ class Environment:
 
         rgb = np.stack([r, g, b], axis=-1) * darkness
         np.clip(rgb, 0.0, 255.0, out=rgb)
+        rgb[self.obstacles] = np.array(config.COLOR_OBSTACLE, dtype=np.float64) * darkness
         rgb = rgb.astype(np.uint8)
         return np.transpose(rgb, (1, 0, 2))

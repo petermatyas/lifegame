@@ -32,7 +32,7 @@ class Herbivore(MobileEntity):
 
         predator = sim.find_nearest(self, sim.carn_grid, self.traits["vision_range"])
         if predator is not None:
-            self._flee_from(predator.x, predator.y, dt, speed_mult=1.0 + self.traits["flee_bonus"])
+            self._flee_from(predator.x, predator.y, dt, speed_mult=1.0 + self.traits["flee_bonus"], env=env)
         else:
             food = sim.find_nearest(self, sim.plant_grid, self.traits["vision_range"])
             if food is not None:
@@ -43,9 +43,9 @@ class Herbivore(MobileEntity):
                     food.energy -= bite
                     self.energy = min(self.max_energy, self.energy + bite * 0.8)
                 else:
-                    self._move_towards(food.x, food.y, dt)
+                    self._move_towards(food.x, food.y, dt, env=env)
             else:
-                self._wander(dt)
+                self._wander(dt, env=env)
 
         self.reproduce_cooldown -= dt
         if self.energy > self.max_energy * 0.55 and self.reproduce_cooldown <= 0 and self.age > 50:

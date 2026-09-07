@@ -60,8 +60,24 @@ class Simulation:
             x = random.uniform(0, self.width)
         if y is None:
             y = random.uniform(0, self.height)
+        x, y = self._nearest_free_position(x, y)
         genome = Genome.random(cls.GENES)
         return cls(x, y, genome)
+
+    def _nearest_free_position(self, x: float, y: float) -> tuple[float, float]:
+        """Ha (x, y) sziklára esne, a legközelebbi szabad cellát keresi
+        egyre táguló gyűrűkben, hogy egyedek soha ne ragadjanak akadályba."""
+        if not self.environment.is_blocked(x, y):
+            return x, y
+        cell = config.CELL_SIZE
+        for radius in range(1, 10):
+            for dx in range(-radius, radius + 1):
+                for dy in range(-radius, radius + 1):
+                    nx = min(max(x + dx * cell, 0), self.width)
+                    ny = min(max(y + dy * cell, 0), self.height)
+                    if not self.environment.is_blocked(nx, ny):
+                        return nx, ny
+        return x, y
 
     def spawn_entity(self, species: str, x: float, y: float) -> None:
         species = species.lower()
@@ -79,6 +95,8 @@ class Simulation:
         dist = random.uniform(6.0, parent.traits["seed_spread"])
         x = min(max(parent.x + math.cos(angle) * dist, 0), self.width)
         y = min(max(parent.y + math.sin(angle) * dist, 0), self.height)
+        if self.environment.is_blocked(x, y):
+            return
         genome = parent.genome.copy_mutated(self.mutation_rate, self.mutation_strength)
         child = Plant(x, y, genome, generation=parent.generation + 1)
         self.plants.append(child)
@@ -89,6 +107,7 @@ class Simulation:
         child_genome = a.genome.crossover(b.genome).mutate(self.mutation_rate, self.mutation_strength)
         cx = min(max((a.x + b.x) / 2 + random.uniform(-8, 8), 0), self.width)
         cy = min(max((a.y + b.y) / 2 + random.uniform(-8, 8), 0), self.height)
+        cx, cy = self._nearest_free_position(cx, cy)
         child = type(a)(cx, cy, child_genome, generation=max(a.generation, b.generation) + 1)
         container.append(child)
 

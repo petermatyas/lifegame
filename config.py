@@ -94,6 +94,10 @@ CARNIVORE_RANGES = {
     "camouflage": (0.0, 1.0),
 }
 
+# --- Terepakadályok (sziklák / hegyek) ---
+OBSTACLE_CLUSTER_COUNT = 14        # hány sziklatömb generálódjon
+OBSTACLE_CLUSTER_SIZE = (3, 10)    # egy tömb hossza cellákban (min, max)
+
 # --- Színek (sötét téma) ---
 COLOR_BG = (18, 18, 24)
 COLOR_PANEL = (26, 26, 34)
@@ -101,6 +105,8 @@ COLOR_PANEL_BORDER = (55, 55, 68)
 COLOR_TEXT = (225, 225, 232)
 COLOR_TEXT_DIM = (150, 150, 162)
 COLOR_ACCENT = (90, 160, 220)
+
+COLOR_OBSTACLE = (92, 88, 80)
 
 COLOR_PLANT = (70, 200, 90)
 COLOR_HERBIVORE = (80, 150, 235)

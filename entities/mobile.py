@@ -14,31 +14,39 @@ class MobileEntity(Entity):
         super().__init__(*args, **kwargs)
         self.wander_dir = random.uniform(0.0, 2 * math.pi)
 
-    def _move_towards(self, target_x: float, target_y: float, dt: float, speed: float | None = None) -> None:
+    def _move_towards(self, target_x: float, target_y: float, dt: float, speed: float | None = None, env=None) -> None:
         dx, dy = target_x - self.x, target_y - self.y
         dist = math.hypot(dx, dy) or 1e-6
         sp = speed if speed is not None else self.traits["speed"]
         step = sp * dt * config.MOVE_SCALE
-        self.x += dx / dist * step
-        self.y += dy / dist * step
+        new_x = self.x + dx / dist * step
+        new_y = self.y + dy / dist * step
+        if env is None or not env.is_blocked(new_x, new_y):
+            self.x, self.y = new_x, new_y
         self.energy -= 0.006 * sp * dt
 
-    def _flee_from(self, threat_x: float, threat_y: float, dt: float, speed_mult: float = 1.0) -> None:
+    def _flee_from(self, threat_x: float, threat_y: float, dt: float, speed_mult: float = 1.0, env=None) -> None:
         dx, dy = self.x - threat_x, self.y - threat_y
         dist = math.hypot(dx, dy) or 1e-6
         sp = self.traits["speed"] * speed_mult
         step = sp * dt * config.MOVE_SCALE
-        self.x += dx / dist * step
-        self.y += dy / dist * step
+        new_x = self.x + dx / dist * step
+        new_y = self.y + dy / dist * step
+        if env is None or not env.is_blocked(new_x, new_y):
+            self.x, self.y = new_x, new_y
         self.energy -= 0.012 * sp * dt
 
-    def _wander(self, dt: float) -> None:
+    def _wander(self, dt: float, env=None) -> None:
         if random.random() < 0.05:
             self.wander_dir += random.uniform(-1.3, 1.3)
         sp = self.traits["speed"] * 0.4
         step = sp * dt * config.MOVE_SCALE
-        self.x += math.cos(self.wander_dir) * step
-        self.y += math.sin(self.wander_dir) * step
+        new_x = self.x + math.cos(self.wander_dir) * step
+        new_y = self.y + math.sin(self.wander_dir) * step
+        if env is None or not env.is_blocked(new_x, new_y):
+            self.x, self.y = new_x, new_y
+        else:
+            self.wander_dir = random.uniform(0.0, 2 * math.pi)
         self.energy -= 0.002 * sp * dt
 
     def _clamp_to_world(self) -> None:

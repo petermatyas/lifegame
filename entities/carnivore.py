@@ -58,9 +58,9 @@ class Carnivore(MobileEntity):
                         prey.alive = False
                         prey.energy = 0.0
             else:
-                self._move_towards(prey.x, prey.y, dt)
+                self._move_towards(prey.x, prey.y, dt, env=env)
         else:
-            self._wander(dt)
+            self._wander(dt, env=env)
 
         self.reproduce_cooldown -= dt
         if self.energy > self.max_energy * 0.6 and self.reproduce_cooldown <= 0 and self.age > 100:
