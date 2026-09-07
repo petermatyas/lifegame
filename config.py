@@ -10,7 +10,10 @@ SIM_HEIGHT = WORLD_ROWS * CELL_SIZE
 
 PANEL_WIDTH = 340
 WINDOW_WIDTH = SIM_WIDTH + PANEL_WIDTH
-WINDOW_HEIGHT = SIM_HEIGHT
+# a panel a szimulacios teruletnel magasabb, hogy a nepesseg- es
+# kornyezet-grafikonnak es a felirataiknak is jusson hely
+PANEL_EXTRA_HEIGHT = 170
+WINDOW_HEIGHT = SIM_HEIGHT + PANEL_EXTRA_HEIGHT
 
 FPS = 60
 
@@ -24,7 +27,7 @@ DEFAULT_RAIN_CHANCE = 0.0015       # esély/tick, hogy elkezdjen esni
 DEFAULT_RAIN_INTENSITY = 1.0
 DEFAULT_MUTATION_RATE = 0.06
 DEFAULT_MUTATION_STRENGTH = 0.12
-DEFAULT_TIME_SCALE = 1.0
+DEFAULT_TIME_SCALE = 0.25
 
 # --- Kezdeti populációk és korlátok (túlnépesedés elleni védelem) ---
 INITIAL_PLANTS = 220

@@ -17,7 +17,7 @@ import pygame
 import config
 from simulation.engine import Simulation
 from ui.controls import Slider, Button
-from ui.hud import draw_hud, draw_population_graph
+from ui.hud import draw_hud, draw_population_graph, draw_environment_graph
 from ui.inspector import find_clicked_entity, draw_inspector
 
 
@@ -132,8 +132,11 @@ def main() -> None:
     spawn_carn_btn = Button((x, y, w, 26), "+ Ragadozo lehelyezese", lambda: set_pending("carnivore"))
     y += 32
 
-    graph_rect = pygame.Rect(x, y + 18, w, 110)
-    y += 18 + 110 + 24
+    graph_rect = pygame.Rect(x, y + 18, w, 100)
+    y += 18 + 100 + 40
+
+    env_graph_rect = pygame.Rect(x, y + 18, w, 100)
+    y += 18 + 100 + 40
 
     inspector_rect = pygame.Rect(x, y, w, config.WINDOW_HEIGHT - y - 15)
 
@@ -221,6 +224,7 @@ def main() -> None:
         screen.blit(spawn_label, (x, spawn_label_y))
 
         draw_population_graph(screen, graph_rect, font_small, sim.stats)
+        draw_environment_graph(screen, env_graph_rect, font_small, sim.stats)
         draw_inspector(screen, inspector_rect, font_small, sim.selected_entity)
 
         pygame.display.flip()
