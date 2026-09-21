@@ -49,6 +49,10 @@ class MobileEntity(Entity):
             self.wander_dir = random.uniform(0.0, 2 * math.pi)
         self.energy -= 0.002 * sp * dt
 
+    def _rest(self, dt: float) -> None:
+        """Pihenes/alvas: nem mozog, igy a `_wander`-rel ellentetben nem
+        fogyaszt mozgasi energiat - csak az alap metabolizmus terheli."""
+
     def _clamp_to_world(self) -> None:
         bounced = False
         if self.x < 0:

@@ -6,6 +6,7 @@ import itertools
 import math
 import random
 
+from . import states
 from .genome import Genome
 
 _id_counter = itertools.count(1)
@@ -15,6 +16,10 @@ class Entity:
     GENES: list[str] = []
     RANGES: dict[str, tuple[float, float]] = {}
     BASE_COLOR = (255, 255, 255)
+    CORPSE_RATIO = 0.0
+    # legtöbb faj kerüli az állóvizet (lásd Simulation._nearest_free_position);
+    # a Plant felülírja, mert víztűrő genommal vízben is megélhet
+    ALLOW_WATER_PLACEMENT = False
 
     def __init__(self, x: float, y: float, genome: Genome, energy: float | None = None, generation: int = 0):
         self.id = next(_id_counter)
@@ -28,6 +33,11 @@ class Entity:
         self.reproduce_cooldown = random.uniform(0.0, 60.0)
         max_energy = self.traits.get("max_energy", 100.0)
         self.energy = energy if energy is not None else max_energy * 0.55
+        self.state: str = states.WANDER
+        # a halalt kovetoen egy teljes tick-ig meg a listaban marad
+        # (allapot="Halott"), hogy meg lehessen figyelni/kivalasztani,
+        # mielott a szimulacio tenylegesen eltavolitja
+        self.pending_removal: bool = False
 
     @property
     def max_energy(self) -> float:

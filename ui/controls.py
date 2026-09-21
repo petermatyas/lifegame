@@ -91,3 +91,46 @@ class Button:
         pygame.draw.rect(surface, config.COLOR_PANEL_BORDER, self.rect, 1, border_radius=6)
         text_surf = font.render(self.text, True, config.COLOR_TEXT)
         surface.blit(text_surf, text_surf.get_rect(center=self.rect.center))
+
+
+class SectionHeader:
+    """Osszecsukhato oldalsav-szakasz fejlece: kattintasra elrejti/mutatja
+    a hozza tartozo vezerloket (lasd main.py `sections`), hogy a hosszu
+    panel athataveto maradjon."""
+
+    def __init__(self, rect: tuple[int, int, int, int], title: str, collapsed: bool = False):
+        self.rect = pygame.Rect(rect)
+        self.title = title
+        self.collapsed = collapsed
+
+    def handle_event(self, event: pygame.event.Event) -> bool:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.rect.collidepoint(event.pos):
+            self.collapsed = not self.collapsed
+            return True
+        return False
+
+    def draw(self, surface: pygame.Surface, font: pygame.font.Font) -> None:
+        pygame.draw.rect(surface, (40, 40, 52), self.rect, border_radius=4)
+        pygame.draw.rect(surface, config.COLOR_PANEL_BORDER, self.rect, 1, border_radius=4)
+        arrow = ">" if self.collapsed else "v"
+        label_surf = font.render(f"{arrow} {self.title}", True, config.COLOR_TEXT)
+        surface.blit(label_surf, (self.rect.x + 8, self.rect.centery - label_surf.get_height() // 2))
+
+
+class Label:
+    """Egyszeru, csak-szoveg "vezerlo": nincs interakcioja, de a `.rect`-je
+    reven ugyanugy resze lehet egy osszecsukhato szakasznak, mint egy
+    Slider vagy Button (lasd main.py `sections`)."""
+
+    def __init__(self, pos: tuple[int, int], text: str, color: tuple[int, int, int] | None = None):
+        self.rect = pygame.Rect(pos[0], pos[1], 0, 0)
+        self.text = text
+        self.color = color
+
+    def handle_event(self, event: pygame.event.Event) -> bool:
+        return False
+
+    def draw(self, surface: pygame.Surface, font: pygame.font.Font) -> None:
+        color = self.color or config.COLOR_TEXT_DIM
+        text_surf = font.render(self.text, True, color)
+        surface.blit(text_surf, self.rect.topleft)

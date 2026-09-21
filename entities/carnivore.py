@@ -6,6 +6,7 @@ from __future__ import annotations
 import random
 
 import config
+from . import states
 from .mobile import MobileEntity
 
 
@@ -17,6 +18,7 @@ class Carnivore(MobileEntity):
     GENES = config.CARNIVORE_GENES
     RANGES = config.CARNIVORE_RANGES
     BASE_COLOR = config.COLOR_CARNIVORE
+    CORPSE_RATIO = config.CARNIVORE_CORPSE_RATIO
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -43,6 +45,7 @@ class Carnivore(MobileEntity):
 
         self.attack_cooldown = max(0.0, self.attack_cooldown - dt)
 
+        hungry = self.energy_ratio < config.HUNGRY_ENERGY_RATIO
         prey = sim.find_nearest(self, sim.herb_grid, self.traits["vision_range"])
         if prey is not None:
             dist = self.distance_to(prey)
@@ -57,10 +60,23 @@ class Carnivore(MobileEntity):
                         self.energy = min(self.max_energy, self.energy + prey.energy * 0.75)
                         prey.alive = False
                         prey.energy = 0.0
+                        self.state = states.EATING
+                    else:
+                        self.state = states.HUNTING
+                else:
+                    self.state = states.HUNTING
             else:
                 self._move_towards(prey.x, prey.y, dt, env=env)
+                self.state = states.HUNTING
+        elif hungry:
+            self._wander(dt, env=env)
+            self.state = states.HUNGRY
+        elif not sim.weather.is_day() and self.energy_ratio > config.SLEEP_MIN_ENERGY_RATIO:
+            self._rest(dt)
+            self.state = states.SLEEPING
         else:
             self._wander(dt, env=env)
+            self.state = states.WANDER
 
         self.reproduce_cooldown -= dt
         if self.energy > self.max_energy * 0.6 and self.reproduce_cooldown <= 0 and self.age > 100:
@@ -72,6 +88,10 @@ class Carnivore(MobileEntity):
                 cooldown = 420.0 - self.traits["fertility"] * 260.0
                 self.reproduce_cooldown = cooldown
                 mate.reproduce_cooldown = cooldown
+                if self.state != states.HUNTING:
+                    self.state = states.MATING
+                if mate.state != states.HUNTING:
+                    mate.state = states.MATING
 
         self._clamp_to_world()
 
@@ -79,7 +99,16 @@ class Carnivore(MobileEntity):
         import pygame
 
         radius = int(self.traits["size"])
-        pygame.draw.circle(surface, self.BASE_COLOR, (int(self.x), int(self.y)), radius)
-        pygame.draw.circle(surface, (20, 20, 25), (int(self.x), int(self.y)), radius, 1)
+        pos = (int(self.x), int(self.y))
+        color = self.BASE_COLOR
+        if self.state == states.DEAD:
+            color = (90, 90, 90)
+        elif self.state == states.SLEEPING:
+            r, g, b = color
+            color = (int(r * 0.5), int(g * 0.5), int(b * 0.5))
+        pygame.draw.circle(surface, color, pos, radius)
+        pygame.draw.circle(surface, (20, 20, 25), pos, radius, 1)
         tip = (int(self.x + radius * 0.9), int(self.y - radius * 0.9))
         pygame.draw.circle(surface, (255, 235, 200), tip, max(1, radius // 3))
+        if self.state == states.HUNTING:
+            pygame.draw.circle(surface, (255, 210, 60), pos, radius + 2, 1)
